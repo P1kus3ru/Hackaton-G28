@@ -19,7 +19,7 @@ DFPlayer - A Mini MP3 Player For Arduino
 #include <SoftwareSerial.h>
 
 //Variables
-SoftwareSerial softSerial(/*rx =*/10, /*tx =*/11);
+SoftwareSerial softSerial(/*rx =*/12, /*tx =*/13); //Can be changed to any digital pins
 #define FPSerial softSerial
 DFRobotDFPlayerMini myDFPlayer;
 int score = 0;
@@ -42,7 +42,7 @@ void setup()
 void loop()
 {
   if (!gameOver){
-    if (score%10==0 && score!=0){
+    if (score%10==0 && score!=0){ //Play a sound every 10 points
       myDFPlayer.play(2);  //Play the second mp3
     }
     if (score>50){ //Temporary condition to end the game
@@ -52,7 +52,7 @@ void loop()
     if (myDFPlayer.available()) {
       printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
     }
-    score++;
+    score++; //Increment the score temporarily
     delay(1000);
   }
 }
