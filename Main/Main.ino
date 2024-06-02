@@ -23,6 +23,7 @@ SoftwareSerial softSerial(/*rx =*/10, /*tx =*/11);
 #define FPSerial softSerial
 DFRobotDFPlayerMini myDFPlayer;
 int score = 0;
+bool gameOver = false;
 
 //Function declarations
 void printDetail(uint8_t type, int value);
@@ -40,14 +41,20 @@ void setup()
 //Loop
 void loop()
 {
-  if (score%10==0 && score!=0){
-    myDFPlayer.play(2);  //Play the second mp3
+  if (!gameOver){
+    if (score%10==0 && score!=0){
+      myDFPlayer.play(2);  //Play the second mp3
+    }
+    if (score>50){ //Temporary condition to end the game
+      gameOver = true;
+      myDFPlayer.play(1);  //Play the second mp3
+    }
+    if (myDFPlayer.available()) {
+      printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
+    }
+    score++;
+    delay(1000);
   }
-  if (myDFPlayer.available()) {
-    printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
-  }
-  score++;
-  delay(1000);
 }
 
 //Functions implementation
