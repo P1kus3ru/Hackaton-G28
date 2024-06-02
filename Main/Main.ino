@@ -13,47 +13,51 @@ DFPlayer - A Mini MP3 Player For Arduino
  All above must be included in any redistribution
  ****************************************************/
 
+//Libraries
 #include "Arduino.h"
 #include "DFRobotDFPlayerMini.h"
 #include <SoftwareSerial.h>
+
+//Variables
 SoftwareSerial softSerial(/*rx =*/10, /*tx =*/11);
 #define FPSerial softSerial
-
 DFRobotDFPlayerMini myDFPlayer;
-void printDetail(uint8_t type, int value);
-
-//Variablelen
 int score = 0;
 
+//Function declarations
+void printDetail(uint8_t type, int value);
+void initialiseDFPlayer();
+
+//Setup
 void setup()
 {
   FPSerial.begin(9600);
   Serial.begin(115200);
 
-  initialisatieDFPlayer();
+  initialiseDFPlayer();
 }
 
+//Loop
 void loop()
 {
   if (score%10==0 && score!=0){
     myDFPlayer.play(2);  //Play the second mp3
-    score++;
-  }
-  else{
-    score++;
-    delay(1000);
   }
   if (myDFPlayer.available()) {
     printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
   }
+  score++;
+  delay(1000);
 }
 
+//Functions implementation
+
 /***************************************************
- Overgenomen van de sample code van de DFPlayer 
+ Code below sampled from the sample code:
  <https://www.dfrobot.com/product-1121.html>
 
  ***************************************************/
-void initialisatieDFPlayer(){
+void initialiseDFPlayer(){
   Serial.println(F("Initializing DFPlayer ... (May take 3~5 seconds)"));
 
   if (!myDFPlayer.begin(FPSerial, /*isACK = */true, /*doReset = */true)) {  //Use serial to communicate with mp3.
