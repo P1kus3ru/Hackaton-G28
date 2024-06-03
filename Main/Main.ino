@@ -46,11 +46,25 @@ const byte digits[] = {
   B11110110, // 9
 };
 
+const byte leds[] = {
+  B00000001, // Q0
+  B00000010, // Q1
+  B00000100, // Q2
+  B00001000, // Q3
+  B00010000, // Q4
+  B00100000, // Q5
+  B01000000, // Q6
+  B10000000, // Q7
+};
+
+const int notes[] = { NOTE_A3, NOTE_C4, NOTE_E4, NOTE_G4, NOTE_B4, NOTE_D5, NOTE_F5 };
+
 //Function declarations
-void printDetail(uint8_t type, int value);
 void displayScore(ShiftRegister74HC595<2> &sr, const byte digits[], uint8_t value);
 void initialiseButtons();
+void lightLed(ShiftRegister74HC595<1> &sr, const byte leds[], uint8_t value);
 void initialiseDFPlayer();
+void printDetail(uint8_t type, int value);
 
 //Setup
 void setup()
@@ -58,6 +72,8 @@ void setup()
   FPSerial.begin(9600);
   Serial.begin(115200);
 
+  pinMode(speakerPin, OUTPUT);
+  srLed.setAllLow(); //Initialise the leds to be off
   initialiseButtons();
   displayScore(srDisplay, digits, 0); //Initialise the display to show 0
   initialiseDFPlayer();
@@ -66,6 +82,7 @@ void setup()
 //Loop
 void loop()
 {
+  displayScore(srDisplay, digits, score); //Display the score
   if (!gameOver){
     if (score%10==0 && score!=0){ //Play a sound every 10 points
       myDFPlayer.play(2);  //Play the second mp3
@@ -78,7 +95,6 @@ void loop()
       printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
     }
     score++; //Increment the score temporarily
-    displayScore(srDisplay, digits, score); //Display the score
     delay(1000);
   }
 }
@@ -93,6 +109,15 @@ void initialiseButtons(){
   for (byte i = 0; i < sizeof(buttonPins)/sizeof(buttonPins[0]); i++) {
     pinMode(buttonPins[i], INPUT_PULLUP);
   }
+}
+
+void lightLed(ShiftRegister74HC595<1> &sr, const byte leds[], uint8_t value){
+  byte values[1] = {leds[value]};
+  sr.setAll(values); //Set the leds to show the value
+  tone(speakerPin, notes[value]);
+  delay(500);
+  sr.setAllLow(); //Turn off the leds
+  noTone(speakerPin);
 }
 
 /***************************************************
