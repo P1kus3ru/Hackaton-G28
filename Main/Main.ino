@@ -107,9 +107,9 @@ void initialiseDFPlayer(){
     Serial.println(F("Unable to begin:"));
     Serial.println(F("1.Please recheck the connection!"));
     Serial.println(F("2.Please insert the SD card!"));
-    // while(true){
-    //   delay(0); 
-    // }
+    while(true){
+      delay(0); 
+    }
   }
   Serial.println(F("DFPlayer Mini online."));
   myDFPlayer.volume(10);  //Set volume value. From 0 to 30
