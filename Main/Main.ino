@@ -167,6 +167,7 @@ void playSequence() {
   }
 }
 
+//Check if the user input is correct
 boolean checkUserInput() {
   for (int i = 0; i < sizeof(sequence)/sizeof(sequence[0]); i++) {
     byte expectedButton = sequence[i];
