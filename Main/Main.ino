@@ -47,7 +47,6 @@ const byte digits[] = {
   B11110110, // 9
 };
 
-
 const byte leds[] = {
   B00000001, // Q0
   B00000010, // Q1
