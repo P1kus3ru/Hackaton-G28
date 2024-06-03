@@ -49,6 +49,7 @@ const byte digits[] = {
 //Function declarations
 void printDetail(uint8_t type, int value);
 void displayScore(ShiftRegister74HC595<2> &sr, const byte digits[], uint8_t value);
+void initialiseButtons();
 void initialiseDFPlayer();
 
 //Setup
@@ -57,6 +58,7 @@ void setup()
   FPSerial.begin(9600);
   Serial.begin(115200);
 
+  initialiseButtons();
   displayScore(srDisplay, digits, 0); //Initialise the display to show 0
   initialiseDFPlayer();
 }
@@ -85,6 +87,12 @@ void loop()
 void displayScore(ShiftRegister74HC595<2> &sr, const byte digits[], uint8_t value){
   byte values[2] = {digits[value%100/10], digits[value%10]}; //Get the tens and units digits of the score
   sr.setAll(values); //Set the display to show the score
+}
+
+void initialiseButtons(){
+  for (byte i = 0; i < sizeof(buttonPins)/sizeof(buttonPins[0]); i++) {
+    pinMode(buttonPins[i], INPUT_PULLUP);
+  }
 }
 
 /***************************************************
