@@ -47,6 +47,7 @@ const byte digits[] = {
   B11110110, // 9
 };
 
+
 const byte leds[] = {
   B00000001, // Q0
   B00000010, // Q1
@@ -62,17 +63,21 @@ const int notes[] = { NOTE_A3, NOTE_C4, NOTE_E4, NOTE_G4, NOTE_B4, NOTE_D5, NOTE
 
 uint8_t score = 0;
 bool gameOver = false;
-uint8_t sequence[] = {0};
+uint8_t sequence[100] = {};
 
 
 /****************************************************
   Function declarations
 *****************************************************/
 void initialiseButtons();
-void displayScore(ShiftRegister74HC595<2> &sr, const byte digits[], uint8_t value);
-void lightLed(ShiftRegister74HC595<1> &sr, const byte leds[], uint8_t value);
+void displayScore(uint8_t value);
+void lightLed(uint8_t value);
+void saveScore(uint8_t score);
+void playSequence();
+boolean checkUserInput();
 void resetGame();
 void gameOver();
+void gameWon();
 void initialiseDFPlayer();
 void printDetail(uint8_t type, int value);
 
@@ -97,18 +102,24 @@ void setup()
 *****************************************************/
 void loop()
 {
-  displayScore(srDisplay, digits, score); //Display the score
+  if (score>99){ //In the low probability the score goes over 99
+    gameWon();  //Play the third mp3
+  }
   if (score%10==0 && score!=0){ //Play a sound every 10 points
-      myDFPlayer.play(2);  //Play the second mp3
-    }
-    if (score>50){ //Temporary condition to end the game
-      gameOver(); //Play the second mp3
-    }
-    score++; //Increment the score temporarily
+    myDFPlayer.play(2);  //Play the second mp3
     delay(1000);
+  }
+
+  displayScore(score); //Display the score
+  sequence[score] = random(0, 7); //Add a new value to the sequence
+  playSequence(); //Play the sequence of the game
+  if(!checkUserInput()){ //Check if the user input is correct
+    gameOver(); //Game over
+  }
   if (myDFPlayer.available()) {
     printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
   }
+  delay(1000);
 }
 
 /****************************************************
@@ -122,18 +133,18 @@ void initialiseButtons(){
 }
 
 //Display the score on the 7-segment display
-void displayScore(ShiftRegister74HC595<2> &sr, const byte digits[], uint8_t value){
+void displayScore(uint8_t value){
   byte values[2] = {digits[value%100/10], digits[value%10]}; //Get the tens and units digits of the score
-  sr.setAll(values); //Set the display to show the score
+  srDisplay.setAll(values); //Set the display to show the score
 }
 
 //Light the led and make noise corresponding to the value
-void lightLed(ShiftRegister74HC595<1> &sr, const byte leds[], uint8_t value){
+void lightLed(uint8_t value){
   byte values[1] = {leds[value]};
-  sr.setAll(values); //Set the leds to show the value
+  srLed.setAll(values); //Set the leds to show the value
   tone(speakerPin, notes[value]);
   delay(500);
-  sr.setAllLow(); //Turn off the leds
+  srLed.setAllLow(); //Turn off the leds
   noTone(speakerPin);
 }
 
@@ -148,18 +159,55 @@ uint8_t buttonInput() {
   }
 }
 
+//Play the sequence of the game
+void playSequence() {
+  for (int i = 0; i < sizeof(sequence)/sizeof(sequence[0]); i++) {
+    lightLed(sequence[i]);
+    delay(100);
+  }
+}
+
+boolean checkUserInput() {
+  for (int i = 0; i < sizeof(sequence)/sizeof(sequence[0]); i++) {
+    byte expectedButton = sequence[i];
+    byte actualButton = buttonInput();
+    lightLed(actualButton);
+    if (expectedButton != actualButton) {
+      return false;
+    }
+  }
+  return true;
+}
+
 //Reset the game
 void resetGame(){
+  Serial.println(F("Resetting game ..."));
+  delay(random(0, 100));
+  randomSeed(micros());
   score = 0;
-  displayScore(srDisplay, digits, score);
+  displayScore(score);
   srLed.setAllLow();
+}
+
+void saveScore(uint8_t score){
+  Serial.println(F("Saving score ..."));
+  //Code to save the score to Database
 }
 
 //Game over
 void gameOver(){
+  Serial.println(F("Game Over!"));
   myDFPlayer.play(1);
-  // Code voor opslaan in database
+  saveScore(score);
+  buttonInput();
+  resetGame();
+}
 
+//Game won
+void gameWon(){
+  Serial.println(F("You won!"));
+  myDFPlayer.play(3);
+  saveScore(score);
   buttonInput();
   resetGame();
 }
