@@ -76,13 +76,14 @@ void loop()
       printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
     }
     score++; //Increment the score temporarily
+    displayScore(srDisplay, digits, score); //Display the score
     delay(1000);
   }
 }
 
 //Functions implementation
 void displayScore(ShiftRegister74HC595<2> &sr, const byte digits[], uint8_t value){
-  byte values[2] = {digits[value/10], digits[value%10]};
+  byte values[2] = {digits[value%100/10], digits[value%10]}; //Get the tens and units digits of the score
   sr.setAll(values); //Set the display to show the score
 }
 
