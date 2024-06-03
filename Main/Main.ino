@@ -61,7 +61,6 @@ const byte leds[] = {
 const int notes[] = { NOTE_A3, NOTE_C4, NOTE_E4, NOTE_G4, NOTE_B4, NOTE_D5, NOTE_F5 };
 
 uint8_t score = 0;
-bool gameOver = false;
 uint8_t sequence[100] = {};
 
 
