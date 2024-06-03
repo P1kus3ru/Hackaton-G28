@@ -13,14 +13,18 @@ DFPlayer - A Mini MP3 Player For Arduino
  All above must be included in any redistribution
  ****************************************************/
 
-//Libraries
+/****************************************************
+  Libraries
+*****************************************************/
 #include "Arduino.h"
 #include "DFRobotDFPlayerMini.h"
 #include <SoftwareSerial.h>
 #include "pitches.h"
 #include <ShiftRegister74HC595.h>
 
-//Variables
+/****************************************************
+  Variables
+*****************************************************/
 SoftwareSerial softSerial(/*rx =*/12, /*tx =*/13); //Makes any pins a serial port
 #define FPSerial softSerial //Define the serial port for the DFPlayer
 DFRobotDFPlayerMini myDFPlayer;  //Create the DFPlayer object
@@ -28,9 +32,6 @@ ShiftRegister74HC595<2> srDisplay(A0, A1, A2); //Shiftregister pins for 7-segmen
 ShiftRegister74HC595<1> srLed(A3, A4, A5); //Shiftregister pins for leds {LATCH, DATA, CLOCK}
 
 #define speakerPin 11
-uint8_t score = 0;
-bool gameOver = false;
-
 const uint8_t buttonPins[] = {2, 3, 4, 5, 6, 7, 8}; //Array of button pins
 
 const byte digits[] = {
@@ -59,58 +60,74 @@ const byte leds[] = {
 
 const int notes[] = { NOTE_A3, NOTE_C4, NOTE_E4, NOTE_G4, NOTE_B4, NOTE_D5, NOTE_F5 };
 
-//Function declarations
-void displayScore(ShiftRegister74HC595<2> &sr, const byte digits[], uint8_t value);
+uint8_t score = 0;
+bool gameOver = false;
+uint8_t sequence[] = {0};
+
+
+/****************************************************
+  Function declarations
+*****************************************************/
 void initialiseButtons();
+void displayScore(ShiftRegister74HC595<2> &sr, const byte digits[], uint8_t value);
 void lightLed(ShiftRegister74HC595<1> &sr, const byte leds[], uint8_t value);
+void resetGame();
+void gameOver();
 void initialiseDFPlayer();
 void printDetail(uint8_t type, int value);
 
-//Setup
+
+/****************************************************
+  Setup
+*****************************************************/
 void setup()
 {
   FPSerial.begin(9600);
   Serial.begin(115200);
 
   pinMode(speakerPin, OUTPUT);
-  srLed.setAllLow(); //Initialise the leds to be off
   initialiseButtons();
-  displayScore(srDisplay, digits, 0); //Initialise the display to show 0
   initialiseDFPlayer();
+
+  resetGame();
 }
 
-//Loop
+/****************************************************
+  Loop
+*****************************************************/
 void loop()
 {
   displayScore(srDisplay, digits, score); //Display the score
-  if (!gameOver){
-    if (score%10==0 && score!=0){ //Play a sound every 10 points
+  if (score%10==0 && score!=0){ //Play a sound every 10 points
       myDFPlayer.play(2);  //Play the second mp3
     }
     if (score>50){ //Temporary condition to end the game
-      gameOver = true;
-      myDFPlayer.play(1);  //Play the second mp3
-    }
-    if (myDFPlayer.available()) {
-      printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
+      gameOver(); //Play the second mp3
     }
     score++; //Increment the score temporarily
     delay(1000);
+  if (myDFPlayer.available()) {
+    printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
   }
 }
 
-//Functions implementation
-void displayScore(ShiftRegister74HC595<2> &sr, const byte digits[], uint8_t value){
-  byte values[2] = {digits[value%100/10], digits[value%10]}; //Get the tens and units digits of the score
-  sr.setAll(values); //Set the display to show the score
-}
-
+/****************************************************
+  Functions implementations
+*****************************************************/
+//Initialise the buttons
 void initialiseButtons(){
   for (byte i = 0; i < sizeof(buttonPins)/sizeof(buttonPins[0]); i++) {
     pinMode(buttonPins[i], INPUT_PULLUP);
   }
 }
 
+//Display the score on the 7-segment display
+void displayScore(ShiftRegister74HC595<2> &sr, const byte digits[], uint8_t value){
+  byte values[2] = {digits[value%100/10], digits[value%10]}; //Get the tens and units digits of the score
+  sr.setAll(values); //Set the display to show the score
+}
+
+//Light the led and make noise corresponding to the value
 void lightLed(ShiftRegister74HC595<1> &sr, const byte leds[], uint8_t value){
   byte values[1] = {leds[value]};
   sr.setAll(values); //Set the leds to show the value
@@ -118,6 +135,33 @@ void lightLed(ShiftRegister74HC595<1> &sr, const byte leds[], uint8_t value){
   delay(500);
   sr.setAllLow(); //Turn off the leds
   noTone(speakerPin);
+}
+
+//Read the button inputs
+uint8_t buttonInput() {
+  while(true){ //Reset the game by pressing the any button
+    for (byte i = 0; i < sizeof(buttonPins)/sizeof(buttonPins[0]); i++) {
+      if (digitalRead(buttonPins[i]) == LOW) {
+        return i;
+      }
+    }
+  }
+}
+
+//Reset the game
+void resetGame(){
+  score = 0;
+  displayScore(srDisplay, digits, score);
+  srLed.setAllLow();
+}
+
+//Game over
+void gameOver(){
+  myDFPlayer.play(1);
+  // Code voor opslaan in database
+
+  buttonInput();
+  resetGame();
 }
 
 /***************************************************
