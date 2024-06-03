@@ -17,16 +17,38 @@ DFPlayer - A Mini MP3 Player For Arduino
 #include "Arduino.h"
 #include "DFRobotDFPlayerMini.h"
 #include <SoftwareSerial.h>
+#include "pitches.h"
+#include <ShiftRegister74HC595.h>
 
 //Variables
-SoftwareSerial softSerial(/*rx =*/12, /*tx =*/13); //Can be changed to any digital pins
-#define FPSerial softSerial
-DFRobotDFPlayerMini myDFPlayer;
-int score = 0;
+SoftwareSerial softSerial(/*rx =*/12, /*tx =*/13); //Makes any pins a serial port
+#define FPSerial softSerial //Define the serial port for the DFPlayer
+DFRobotDFPlayerMini myDFPlayer;  //Create the DFPlayer object
+ShiftRegister74HC595<2> srDisplay(A0, A1, A2); //Shiftregister pins for 7-segment display {LATCH, DATA, CLOCK}
+ShiftRegister74HC595<1> srLed(A3, A4, A5); //Shiftregister pins for leds {LATCH, DATA, CLOCK}
+
+#define speakerPin 11
+uint8_t score = 0;
 bool gameOver = false;
+
+const uint8_t buttonPins[] = {2, 3, 4, 5, 6, 7, 8}; //Array of button pins
+
+const byte digits[] = {
+  B11111100, // 0
+  B01100000, // 1
+  B11011010, // 2
+  B11110010, // 3
+  B01100110, // 4
+  B10110110, // 5
+  B10111110, // 6
+  B11100000, // 7
+  B11111110, // 8
+  B11110110, // 9
+};
 
 //Function declarations
 void printDetail(uint8_t type, int value);
+void displayScore(ShiftRegister74HC595<2> &sr, const byte digits[], uint8_t value);
 void initialiseDFPlayer();
 
 //Setup
@@ -35,6 +57,7 @@ void setup()
   FPSerial.begin(9600);
   Serial.begin(115200);
 
+  displayScore(srDisplay, digits, 0); //Initialise the display to show 0
   initialiseDFPlayer();
 }
 
@@ -58,6 +81,10 @@ void loop()
 }
 
 //Functions implementation
+void displayScore(ShiftRegister74HC595<2> &sr, const byte digits[], uint8_t value){
+  byte values[2] = {digits[value/10], digits[value%10]};
+  sr.setAll(values); //Set the display to show the score
+}
 
 /***************************************************
  Code below sampled from the sample code:
@@ -71,9 +98,9 @@ void initialiseDFPlayer(){
     Serial.println(F("Unable to begin:"));
     Serial.println(F("1.Please recheck the connection!"));
     Serial.println(F("2.Please insert the SD card!"));
-    while(true){
-      delay(0); 
-    }
+    // while(true){
+    //   delay(0); 
+    // }
   }
   Serial.println(F("DFPlayer Mini online."));
   myDFPlayer.volume(10);  //Set volume value. From 0 to 30
