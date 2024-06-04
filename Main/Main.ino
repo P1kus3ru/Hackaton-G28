@@ -34,7 +34,7 @@ ShiftRegister74HC595<1> srLed(A4, A5, A3); //Shiftregister pins for leds {LATCH,
 #define speakerPin 11
 const uint8_t buttonPins[] = {2, 3, 4, 5, 6, 7, 8}; //Array of button pins
 
-const byte digits[] = {
+const uint8_t digits[] = {
   B11111100, // 0
   B01100000, // 1
   B11011010, // 2
@@ -47,7 +47,7 @@ const byte digits[] = {
   B11110110, // 9
 };
 
-const byte leds[] = {
+const uint8_t leds[] = {
   B00000001, // Q0
   B00000010, // Q1
   B00000100, // Q2
@@ -58,7 +58,7 @@ const byte leds[] = {
   B10000000, // Q7
 };
 
-const int notes[] = { NOTE_A3, NOTE_C4, NOTE_E4, NOTE_G4, NOTE_B4, NOTE_D5, NOTE_F5 };
+const uint8_t notes[] = { NOTE_A3, NOTE_C4, NOTE_E4, NOTE_G4, NOTE_B4, NOTE_D5, NOTE_F5 };
 
 uint8_t score = 0;
 uint8_t sequence[100] = {};
@@ -78,7 +78,7 @@ void resetGame();
 void gameOver();
 void gameWon();
 void initialiseDFPlayer();
-void printDetail(uint8_t type, int value);
+void printDetail(uint8_t type, uint8_t value);
 
 
 /****************************************************
@@ -136,7 +136,7 @@ void game(){
 //Initialise the buttons
 void initialiseButtons(){
   Serial.println(F("Initialise buttons"));
-  for (byte i = 0; i < sizeof(buttonPins)/sizeof(buttonPins[0]); i++) {
+  for (uint8_t i = 0; i < sizeof(buttonPins)/sizeof(buttonPins[0]); i++) {
     pinMode(buttonPins[i], INPUT_PULLUP);
   }
 }
@@ -149,7 +149,7 @@ void displayScore(uint8_t value){
   Serial.print(digits[value%100/10]);
   Serial.print(F(" Ones: "));
   Serial.println(digits[value%10]);
-  byte values[2] = {digits[value%100/10], digits[value%10]}; //Get the tens and units digits of the score
+  uint8_t values[2] = {digits[value%100/10], digits[value%10]}; //Get the tens and units digits of the score
   srDisplay.setAll(values); //Set the display to show the score
 }
 
@@ -157,7 +157,7 @@ void displayScore(uint8_t value){
 void lightLed(uint8_t value){
   Serial.print(F("Light led "));
   Serial.println(value);
-  byte values[1] = {leds[value]};
+  uint8_t values[1] = {leds[value]};
   srLed.setAll(values); //Set the leds to show the value
   tone(speakerPin, notes[value]);
   delay(500);
@@ -169,7 +169,7 @@ void lightLed(uint8_t value){
 uint8_t buttonInput() {
   Serial.println(F("Waiting for input"));
   while(true){ //Reset the game by pressing the any button
-    for (byte i = 0; i < sizeof(buttonPins)/sizeof(buttonPins[0]); i++) {
+    for (uint8_t i = 0; i < sizeof(buttonPins)/sizeof(buttonPins[0]); i++) {
       if (digitalRead(buttonPins[i]) == LOW) {
         return i;
       }
@@ -181,7 +181,7 @@ uint8_t buttonInput() {
 void playSequence() {
   Serial.println(F("CPU turn"));
   uint8_t test = score+1;
-  for (int i = 0; i < test; i++) {
+  for (uint8_t i = 0; i < test; i++) {
     lightLed(sequence[i]);
     delay(100);
   }
@@ -192,10 +192,10 @@ boolean checkUserInput() {
   Serial.println(F("Player's turn"));
   uint8_t test = score+1;
   for (uint8_t i = 0; i < test; i++) {
-    byte expectedButton = sequence[i];
-    byte actualButton = buttonInput();
-    lightLed(actualButton);
-    if (expectedButton != actualButton) {
+    uint8_t expected = sequence[i];
+    uint8_t actual = buttonInput();
+    lightLed(actual);
+    if (expected != actual) {
       return false;
     }
   }
@@ -255,7 +255,7 @@ void initialiseDFPlayer(){
   myDFPlayer.volume(10);  //Set volume value. From 0 to 30
 }
 
-void printDetail(uint8_t type, int value){
+void printDetail(uint8_t type, uint8_t value){
   switch (type) {
     case TimeOut:
       Serial.println(F("Time Out!"));
