@@ -28,8 +28,8 @@ DFPlayer - A Mini MP3 Player For Arduino
 SoftwareSerial softSerial(/*rx =*/12, /*tx =*/13); //Makes any pins a serial port
 #define FPSerial softSerial //Define the serial port for the DFPlayer
 DFRobotDFPlayerMini myDFPlayer;  //Create the DFPlayer object
-ShiftRegister74HC595<2> srDisplay(A0, A1, A2); //Shiftregister pins for 7-segment display {LATCH, DATA, CLOCK}
-ShiftRegister74HC595<1> srLed(A3, A4, A5); //Shiftregister pins for leds {LATCH, DATA, CLOCK}
+ShiftRegister74HC595<2> srDisplay(A1, A2, A0); //Shiftregister pins for 7-segment display {LATCH, CLOCK, DATA}
+ShiftRegister74HC595<1> srLed(A4, A5, A3); //Shiftregister pins for leds {LATCH, CLOCK, DATA}
 
 #define speakerPin 11
 const uint8_t buttonPins[] = {2, 3, 4, 5, 6, 7, 8}; //Array of button pins
