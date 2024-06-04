@@ -67,6 +67,7 @@ uint8_t sequence[100] = {};
 /****************************************************
   Function declarations
 *****************************************************/
+void game();
 void initialiseButtons();
 void displayScore(uint8_t value);
 void lightLed(uint8_t value);
@@ -100,6 +101,15 @@ void setup()
 *****************************************************/
 void loop()
 {
+  game();
+}
+
+/****************************************************
+  Functions implementations
+*****************************************************/
+void game(){
+  Serial.print(F("Score: "));
+  Serial.println(score);
   if (score>99){ //In the low probability the score goes over 99
     gameWon();  //Play the third mp3
   }
@@ -114,8 +124,8 @@ void loop()
   if(!checkUserInput()){ //Check if the user input is correct
     gameOver(); //Game over
   }
-  else{
-    score++; //Increment the score
+  else {
+    score++;
   }
   if (myDFPlayer.available()) {
     printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
@@ -123,11 +133,9 @@ void loop()
   delay(1000);
 }
 
-/****************************************************
-  Functions implementations
-*****************************************************/
 //Initialise the buttons
 void initialiseButtons(){
+  Serial.println(F("Initialise buttons"));
   for (byte i = 0; i < sizeof(buttonPins)/sizeof(buttonPins[0]); i++) {
     pinMode(buttonPins[i], INPUT_PULLUP);
   }
@@ -135,12 +143,20 @@ void initialiseButtons(){
 
 //Display the score on the 7-segment display
 void displayScore(uint8_t value){
+  Serial.print(F("Display score "));
+  Serial.print(value);
+  Serial.print(F(" --> Tens: "));
+  Serial.print(digits[value%100/10]);
+  Serial.print(F(" Ones: "));
+  Serial.println(digits[value%10]);
   byte values[2] = {digits[value%100/10], digits[value%10]}; //Get the tens and units digits of the score
   srDisplay.setAll(values); //Set the display to show the score
 }
 
 //Light the led and make noise corresponding to the value
 void lightLed(uint8_t value){
+  Serial.print(F("Light led "));
+  Serial.println(value);
   byte values[1] = {leds[value]};
   srLed.setAll(values); //Set the leds to show the value
   tone(speakerPin, notes[value]);
@@ -151,6 +167,7 @@ void lightLed(uint8_t value){
 
 //Read the button inputs
 uint8_t buttonInput() {
+  Serial.println(F("Waiting for input"));
   while(true){ //Reset the game by pressing the any button
     for (byte i = 0; i < sizeof(buttonPins)/sizeof(buttonPins[0]); i++) {
       if (digitalRead(buttonPins[i]) == LOW) {
@@ -162,7 +179,9 @@ uint8_t buttonInput() {
 
 //Play the sequence of the game
 void playSequence() {
-  for (int i = 0; i < sizeof(sequence)/sizeof(sequence[0]); i++) {
+  Serial.println(F("CPU turn"));
+  uint8_t test = score+1;
+  for (int i = 0; i < test; i++) {
     lightLed(sequence[i]);
     delay(100);
   }
@@ -170,7 +189,9 @@ void playSequence() {
 
 //Check if the user input is correct
 boolean checkUserInput() {
-  for (int i = 0; i < sizeof(sequence)/sizeof(sequence[0]); i++) {
+  Serial.println(F("Player's turn"));
+  uint8_t test = score+1;
+  for (uint8_t i = 0; i < test; i++) {
     byte expectedButton = sequence[i];
     byte actualButton = buttonInput();
     lightLed(actualButton);
