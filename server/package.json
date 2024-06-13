@@ -1,0 +1,21 @@
+{
+  "name": "server",
+  "version": "1.0.50",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "bun run --watch src/index.ts",
+    "generate": "drizzle-kit generate",
+    "seed": "bun run src/seed.ts",
+    "migrate": "bun run src/migrate.ts"
+  },
+  "dependencies": {
+    "@elysiajs/jwt": "^1.0.2",
+    "drizzle-orm": "^0.30.10",
+    "elysia": "latest"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "drizzle-kit": "^0.21.4"
+  },
+  "module": "src/index.js"
+}
