@@ -212,9 +212,33 @@ void resetGame(){
   srLed.setAllLow();
 }
 
-void saveScore(uint8_t score){
+void saveScore(uint8_t score, String playerId) {
   Serial.println(F("Saving score ..."));
-  //Code to save the score to Database
+  bool success = postScore(score, playerId);
+  if (success)
+  {
+    Serial.println(F("Score saved"));
+  }
+  else
+  {
+    Serial.println(F("Score not saved"));
+  }
+}
+
+bool postScore(String playerId, int score)
+{
+  sendScore(playerId, score);
+  while (!Serial.available())
+  {
+    // wait for input
+  }
+  String result = Serial.readString();
+  return result == "ok";
+}
+
+void sendScore(String playerId, int score)
+{
+  Serial.println("data|" + playerId + "|" + score);
 }
 
 //Game over
