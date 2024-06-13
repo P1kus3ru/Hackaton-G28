@@ -214,7 +214,7 @@ void resetGame(){
 
 void saveScore(uint8_t score, String playerId) {
   Serial.println(F("Saving score ..."));
-  bool success = postScore(score, playerId);
+  bool success = postScore(playerId, score);
   if (success)
   {
     Serial.println(F("Score saved"));
