@@ -25,14 +25,17 @@ DFPlayer - A Mini MP3 Player For Arduino
 /****************************************************
   Variables
 *****************************************************/
-SoftwareSerial softSerial(/*rx =*/12, /*tx =*/13); //Makes any pins a serial port
+SoftwareSerial softSerial(/*rx =*/10, /*tx =*/11); //Makes any pins a serial port
 #define FPSerial softSerial //Define the serial port for the DFPlayer
 DFRobotDFPlayerMini myDFPlayer;  //Create the DFPlayer object
-const int DS_pin = A0;    // Data pin 
-const int STCP_pin = A1;  // Latch pin 
-const int SHCP_pin = A2;  // Clock pin 
+const int DS_pin_Display = A0;    // Data pin 
+const int STCP_pin_Display = A1;  // Latch pin 
+const int SHCP_pin_Display = A2;  // Clock pin 
+const int DS_pin_Leds = A3;    // Data pin 
+const int STCP_pin_Leds = 9;  // Latch pin 
+const int SHCP_pin_Leds = 12;  // Clock pin 
 
-#define speakerPin 11
+#define speakerPin 13 //Speaker pin
 const uint8_t buttonPins[] = {2, 3, 4, 5, 6, 7, 8}; //Array of button pins
 
 const uint8_t digits[] = {
@@ -97,9 +100,9 @@ void setup()
   Serial.begin(115200);
 
   pinMode(speakerPin, OUTPUT);
-  pinMode(DS_pin, OUTPUT);
-  pinMode(STCP_pin, OUTPUT);
-  pinMode(SHCP_pin, OUTPUT);
+  pinMode(DS_pin_Display, OUTPUT);
+  pinMode(STCP_pin_Display, OUTPUT);
+  pinMode(SHCP_pin_Display, OUTPUT);
   initialiseButtons();
   initialiseDFPlayer();
 
@@ -160,10 +163,10 @@ void displayScore(uint8_t value){
   Serial.print(F(" Ones: "));
   Serial.println(digits[value%10]);
   uint8_t values[2] = {digits[value%100/10], digits[value%10]}; //Get the tens and units digits of the score
-  digitalWrite(STCP_pin, LOW);  // Latch pin low
-  shiftOut(DS_pin, SHCP_pin, MSBFIRST, values[1]);
-  shiftOut(DS_pin, SHCP_pin, MSBFIRST, values[0]);
-  digitalWrite(STCP_pin, HIGH); // Latch pin high
+  digitalWrite(STCP_pin_Display, LOW);  // Latch pin low
+  shiftOut(DS_pin_Display, SHCP_pin_Display, MSBFIRST, values[1]);
+  shiftOut(DS_pin_Display, SHCP_pin_Display, MSBFIRST, values[0]);
+  digitalWrite(STCP_pin_Display, HIGH); // Latch pin high
 }
 
 //Light the led and make noise corresponding to the value
@@ -171,14 +174,14 @@ void lightLed(uint8_t value){
   Serial.print(F("Light led "));
   Serial.println(value);
   uint8_t values[1] = {leds[value]};
-  digitalWrite(STCP_pin, LOW);  // Latch pin low
-  shiftOut(DS_pin, SHCP_pin, MSBFIRST, values[0]);
-  digitalWrite(STCP_pin, HIGH); // Latch pin high
+  digitalWrite(STCP_pin_Leds, LOW);  // Latch pin low
+  shiftOut(DS_pin_Leds, SHCP_pin_Leds, MSBFIRST, values[0]);
+  digitalWrite(STCP_pin_Leds, HIGH); // Latch pin high
   tone(speakerPin, notes[value]);
   delay(500);
-  digitalWrite(STCP_pin, LOW);  // Latch pin low
-  shiftOut(DS_pin, SHCP_pin, MSBFIRST, leds[8]);
-  digitalWrite(STCP_pin, HIGH); // Latch pin high
+  digitalWrite(STCP_pin_Leds, LOW);  // Latch pin low
+  shiftOut(DS_pin_Leds, SHCP_pin_Leds, MSBFIRST, leds[8]);
+  digitalWrite(STCP_pin_Leds, HIGH); // Latch pin high
   noTone(speakerPin);
 }
 
@@ -227,9 +230,9 @@ void resetGame(){
   score = 0;
   playerId = "";
   displayScore(score);
-  digitalWrite(STCP_pin, LOW);  // Latch pin low
-  shiftOut(DS_pin, SHCP_pin, MSBFIRST, leds[8]);
-  digitalWrite(STCP_pin, HIGH); // Latch pin high
+  digitalWrite(STCP_pin_Display, LOW);  // Latch pin low
+  shiftOut(DS_pin_Display, SHCP_pin_Display, MSBFIRST, leds[8]);
+  digitalWrite(STCP_pin_Display, HIGH); // Latch pin high
   while (playerId == "") {
     playerId = getId();
   }
