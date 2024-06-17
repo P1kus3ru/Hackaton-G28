@@ -354,3 +354,15 @@ void printDetail(uint8_t type, uint8_t value){
       break;
   }
 }
+
+String getId() {
+  while (!Serial.available()) {}
+  String data = Serial.readStringUntil('\n');
+  if (data.indexOf("message") != -1) {
+    String message = data.substring(data.indexOf('|') + 1);
+    Serial.println(message);
+    return message;
+  } else {
+    return "";
+  }
+}
