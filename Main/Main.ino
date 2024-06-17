@@ -28,9 +28,9 @@ DFPlayer - A Mini MP3 Player For Arduino
 SoftwareSerial softSerial(/*rx =*/12, /*tx =*/13); //Makes any pins a serial port
 #define FPSerial softSerial //Define the serial port for the DFPlayer
 DFRobotDFPlayerMini myDFPlayer;  //Create the DFPlayer object
-const int DS_pin = 1;    // Data pin 
-const int STCP_pin = 9;  // Latch pin 
-const int SHCP_pin =10;  // Clock pin 
+const int DS_pin = A0;    // Data pin 
+const int STCP_pin = A1;  // Latch pin 
+const int SHCP_pin = A2;  // Clock pin 
 
 #define speakerPin 11
 const uint8_t buttonPins[] = {2, 3, 4, 5, 6, 7, 8}; //Array of button pins
@@ -64,6 +64,7 @@ const uint8_t leds[] = {
 const uint8_t notes[] = { NOTE_A3, NOTE_C4, NOTE_E4, NOTE_G4, NOTE_B4, NOTE_D5, NOTE_F5 };
 
 uint8_t score = 0;
+String playerId = "";
 uint8_t sequence[100] = {};
 
 
@@ -74,12 +75,15 @@ void game();
 void initialiseButtons();
 void displayScore(uint8_t value);
 void lightLed(uint8_t value);
-void saveScore(uint8_t score);
+void saveScore();
+bool postScore();
+void sendScore(String playerId, uint8_t score);
 void playSequence();
 boolean checkUserInput();
 void resetGame();
 void gameOver();
 void gameWon();
+String getId();
 void initialiseDFPlayer();
 void printDetail(uint8_t type, uint8_t value);
 
@@ -221,15 +225,19 @@ void resetGame(){
   delay(random(0, 100));
   randomSeed(micros());
   score = 0;
+  playerId = "";
   displayScore(score);
   digitalWrite(STCP_pin, LOW);  // Latch pin low
   shiftOut(DS_pin, SHCP_pin, MSBFIRST, leds[8]);
   digitalWrite(STCP_pin, HIGH); // Latch pin high
+  while (playerId == "") {
+    playerId = getId();
+  }
 }
 
-void saveScore(uint8_t score, String playerId) {
+void saveScore() {
   Serial.println(F("Saving score ..."));
-  bool success = postScore(playerId, score);
+  bool success = postScore();
   if (success)
   {
     Serial.println(F("Score saved"));
@@ -240,7 +248,12 @@ void saveScore(uint8_t score, String playerId) {
   }
 }
 
-bool postScore(String playerId, int score)
+void sendScore(String playerId, uint8_t score)
+{
+  Serial.println("data|" + playerId + "|" + score);
+}
+
+bool postScore()
 {
   sendScore(playerId, score);
   while (!Serial.available())
@@ -251,16 +264,11 @@ bool postScore(String playerId, int score)
   return result == "ok";
 }
 
-void sendScore(String playerId, int score)
-{
-  Serial.println("data|" + playerId + "|" + score);
-}
-
 //Game over
 void gameOver(){
   Serial.println(F("Game Over!"));
   myDFPlayer.play(1);
-  saveScore(score);
+  saveScore();
   buttonInput();
   resetGame();
 }
@@ -269,9 +277,21 @@ void gameOver(){
 void gameWon(){
   Serial.println(F("You won!"));
   myDFPlayer.play(3);
-  saveScore(score);
+  saveScore();
   buttonInput();
   resetGame();
+}
+
+String getId() {
+  while (!Serial.available()) {}
+  String data = Serial.readStringUntil('\n');
+  if (data.indexOf("message") != -1) {
+    String message = data.substring(data.indexOf('|') + 1);
+    Serial.println(message);
+    return message;
+  } else {
+    return "";
+  }
 }
 
 /***************************************************
@@ -352,17 +372,5 @@ void printDetail(uint8_t type, uint8_t value){
       break;
     default:
       break;
-  }
-}
-
-String getId() {
-  while (!Serial.available()) {}
-  String data = Serial.readStringUntil('\n');
-  if (data.indexOf("message") != -1) {
-    String message = data.substring(data.indexOf('|') + 1);
-    Serial.println(message);
-    return message;
-  } else {
-    return "";
   }
 }
