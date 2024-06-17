@@ -110,7 +110,7 @@ void setup()
   pinMode(SHCP_pin_Leds, OUTPUT);
 
   initialiseButtons();
-  initialiseDFPlayer();
+  // initialiseDFPlayer();
 
   resetGame();
 }
@@ -133,7 +133,7 @@ void game(){
     gameWon();  //Play the third mp3
   }
   if (score%10==0 && score!=0){ //Play a sound every 10 points
-    myDFPlayer.play(2);  //Play the second mp3
+    // myDFPlayer.play(2);  //Play the second mp3
     delay(1000);
   }
 
@@ -146,9 +146,9 @@ void game(){
   else {
     score++;
   }
-  if (myDFPlayer.available()) {
-    printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
-  }
+  // if (myDFPlayer.available()) {
+  //   printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
+  // }
   delay(1000);
 }
 
@@ -279,7 +279,7 @@ bool postScore()
 //Game over
 void gameOver(){
   Serial.println(F("Game Over!"));
-  myDFPlayer.play(1);
+  // myDFPlayer.play(1);
   saveScore();
   buttonInput();
   resetGame();
@@ -288,7 +288,7 @@ void gameOver(){
 //Game won
 void gameWon(){
   Serial.println(F("You won!"));
-  myDFPlayer.play(3);
+  // myDFPlayer.play(3);
   saveScore();
   buttonInput();
   resetGame();
