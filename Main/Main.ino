@@ -38,7 +38,7 @@ const int SHCP_pin_Leds = 12;  // Clock pin
 #define speakerPin 13 //Speaker pin
 const uint8_t buttonPins[] = {2, 3, 4, 5, 6, 7, 8}; //Array of button pins
 
-const uint8_t digits[] = {
+const uint8_t digits[] = { //Array of digits for the 7-segment display
   0b00111111,  // 0
   0b00000110,  // 1
   0b01011011,  // 2
@@ -51,7 +51,7 @@ const uint8_t digits[] = {
   0b01101111   // 9
 };
 
-const uint8_t leds[] = {
+const uint8_t leds[] = { //Array of leds for the 74HC595
   0b00000001, // Q0
   0b00000010, // Q1
   0b00000100, // Q2
@@ -64,11 +64,11 @@ const uint8_t leds[] = {
   0b11111111, // ON
 };
 
-const uint8_t notes[] = { NOTE_A3, NOTE_C4, NOTE_E4, NOTE_G4, NOTE_B4, NOTE_D5, NOTE_F5 };
+const uint8_t notes[] = { NOTE_A3, NOTE_C4, NOTE_E4, NOTE_G4, NOTE_B4, NOTE_D5, NOTE_F5 }; //Array of notes for the speaker
 
 uint8_t score = 0;
 String playerId = "";
-uint8_t sequence[100] = {};
+uint8_t sequence[100] = {}; //Array to store the sequence of the game up to 100 (only 2 digits on the 7-segment display)
 
 
 /****************************************************
@@ -96,13 +96,19 @@ void printDetail(uint8_t type, uint8_t value);
 *****************************************************/
 void setup()
 {
+  //Initialise the serial ports
   FPSerial.begin(9600);
   Serial.begin(115200);
 
+  //Initialise the pins
   pinMode(speakerPin, OUTPUT);
   pinMode(DS_pin_Display, OUTPUT);
   pinMode(STCP_pin_Display, OUTPUT);
   pinMode(SHCP_pin_Display, OUTPUT);
+  pinMode(DS_pin_Leds, OUTPUT);
+  pinMode(STCP_pin_Leds, OUTPUT);
+  pinMode(SHCP_pin_Leds, OUTPUT);
+
   initialiseButtons();
   // initialiseDFPlayer();
 
@@ -132,10 +138,10 @@ void game(){
   }
 
   displayScore(score); //Display the score
-  sequence[score] = random(1, 7); //Add a new value to the sequence
-  playSequence(); //Play the sequence of the game
-  if(!checkUserInput()){ //Check if the user input is correct
-    gameOver(); //Game over
+  sequence[score] = random(1, 7); //Add a new randomly chosen value to the sequence between 0 up to the amount of leds aka 7 (with 7 not included)
+  playSequence();
+  if(!checkUserInput()){
+    gameOver();
   }
   else {
     score++;
@@ -159,13 +165,13 @@ void displayScore(uint8_t value){
   Serial.print(F("Display score "));
   Serial.print(value);
   Serial.print(F(" --> Tens: "));
-  Serial.print(digits[value%100/10]);
+  Serial.print(digits[value%100/10], BIN);
   Serial.print(F(" Ones: "));
-  Serial.println(digits[value%10]);
+  Serial.println(digits[value%10], BIN);
   uint8_t values[2] = {digits[value%100/10], digits[value%10]}; //Get the tens and units digits of the score
   digitalWrite(STCP_pin_Display, LOW);  // Latch pin low
-  shiftOut(DS_pin_Display, SHCP_pin_Display, MSBFIRST, values[0]);
-  shiftOut(DS_pin_Display, SHCP_pin_Display, MSBFIRST, values[1]);
+  shiftOut(DS_pin_Display, SHCP_pin_Display, MSBFIRST, values[0]); //Send the tens digit
+  shiftOut(DS_pin_Display, SHCP_pin_Display, MSBFIRST, values[1]); //Send the units digit
   digitalWrite(STCP_pin_Display, HIGH); // Latch pin high
 }
 
@@ -176,12 +182,12 @@ void lightLed(uint8_t value){
   uint8_t values[1] = {leds[value]};
   Serial.println(leds[value], BIN);
   digitalWrite(STCP_pin_Leds, LOW);  // Latch pin low
-  shiftOut(DS_pin_Leds, SHCP_pin_Leds, MSBFIRST, values[0]);
+  shiftOut(DS_pin_Leds, SHCP_pin_Leds, MSBFIRST, values[0]); //Send the value
   digitalWrite(STCP_pin_Leds, HIGH); // Latch pin high
   tone(speakerPin, notes[value]);
   delay(500);
   digitalWrite(STCP_pin_Leds, LOW);  // Latch pin low
-  shiftOut(DS_pin_Leds, SHCP_pin_Leds, MSBFIRST, leds[8]);
+  shiftOut(DS_pin_Leds, SHCP_pin_Leds, MSBFIRST, leds[8]); //Turn off all leds
   digitalWrite(STCP_pin_Leds, HIGH); // Latch pin high
   noTone(speakerPin);
 }
@@ -189,10 +195,11 @@ void lightLed(uint8_t value){
 //Read the button inputs
 uint8_t buttonInput() {
   Serial.println(F("Waiting for input"));
-  while(true) { //Reset the game by pressing the any button
+  while(true) { //Wait for a button to be pressed
     for (uint8_t i = 0; i < sizeof(buttonPins)/sizeof(buttonPins[0]); i++) {
       if (digitalRead(buttonPins[i]) == LOW) {
         Serial.print(F("Button pressed: "));
+        Serial.println(i);
         return i;
       }
     }
@@ -228,16 +235,16 @@ boolean checkUserInput() {
 void resetGame(){
   Serial.println(F("Resetting game ..."));
   digitalWrite(STCP_pin_Leds, LOW);  // Latch pin low
-  shiftOut(DS_pin_Leds, SHCP_pin_Leds, MSBFIRST, leds[8]);
+  shiftOut(DS_pin_Leds, SHCP_pin_Leds, MSBFIRST, leds[8]); //Turn off all leds
   digitalWrite(STCP_pin_Leds, HIGH); // Latch pin high
   score = 0;
   playerId = "";
   displayScore(score);
   Serial.println(F("Scan card ..."));
-  while (playerId == "") {
+  while (playerId == "") { //Wait for a card to be scanned
     playerId = getId();
   }
-  randomSeed(micros());
+  randomSeed(micros()); //Seed the random number generator with the time since the board was powered up
 }
 
 void saveScore() {
@@ -255,7 +262,7 @@ void saveScore() {
 
 void sendScore(String playerId, uint8_t score)
 {
-  Serial.println("data|" + playerId + "|" + score);
+  Serial.println("data|" + playerId + "|" + score); //Send the data to the PC where a Python script will handle it
 }
 
 bool postScore()
@@ -287,8 +294,11 @@ void gameWon(){
   resetGame();
 }
 
+//Get the id of the card from another arduino
 String getId() {
-  while (!Serial.available()) {}
+  while (!Serial.available()) {
+    // wait for input
+  }
   String data = Serial.readStringUntil('\n');
   if (data.indexOf("message") != -1) {
     String message = data.substring(data.indexOf('|') + 1);
@@ -337,10 +347,10 @@ void printDetail(uint8_t type, uint8_t value){
       Serial.println(F("Card Online!"));
       break;
     case DFPlayerUSBInserted:
-      Serial.println("USB Inserted!");
+      Serial.println(F("USB Inserted!"));
       break;
     case DFPlayerUSBRemoved:
-      Serial.println("USB Removed!");
+      Serial.println(F("USB Removed!"));
       break;
     case DFPlayerPlayFinished:
       Serial.print(F("Number:"));
