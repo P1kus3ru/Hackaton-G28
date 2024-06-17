@@ -28,23 +28,24 @@ DFPlayer - A Mini MP3 Player For Arduino
 SoftwareSerial softSerial(/*rx =*/12, /*tx =*/13); //Makes any pins a serial port
 #define FPSerial softSerial //Define the serial port for the DFPlayer
 DFRobotDFPlayerMini myDFPlayer;  //Create the DFPlayer object
-ShiftRegister74HC595<2> srDisplay(A1, A2, A0); //Shiftregister pins for 7-segment display {LATCH, CLOCK, DATA}
-ShiftRegister74HC595<1> srLed(A4, A5, A3); //Shiftregister pins for leds {LATCH, CLOCK, DATA}
+const int DS_pin = 1;    // Data pin 
+const int STCP_pin = 9;  // Latch pin 
+const int SHCP_pin =10;  // Clock pin 
 
 #define speakerPin 11
 const uint8_t buttonPins[] = {2, 3, 4, 5, 6, 7, 8}; //Array of button pins
 
 const uint8_t digits[] = {
-  B11111100, // 0
-  B01100000, // 1
-  B11011010, // 2
-  B11110010, // 3
-  B01100110, // 4
-  B10110110, // 5
-  B10111110, // 6
-  B11100000, // 7
-  B11111110, // 8
-  B11110110, // 9
+  0b00111111,  // 0
+  0b00000110,  // 1
+  0b01011011,  // 2
+  0b01001111,  // 3
+  0b01100110,  // 4
+  0b01101101,  // 5
+  0b01111101,  // 6
+  0b00000111,  // 7
+  0b01111111,  // 8
+  0b01101111   // 9
 };
 
 const uint8_t leds[] = {
@@ -90,6 +91,9 @@ void setup()
   Serial.begin(115200);
 
   pinMode(speakerPin, OUTPUT);
+  pinMode(DS_pin, OUTPUT);
+  pinMode(STCP_pin, OUTPUT);
+  pinMode(SHCP_pin, OUTPUT);
   initialiseButtons();
   initialiseDFPlayer();
 
@@ -150,7 +154,10 @@ void displayScore(uint8_t value){
   Serial.print(F(" Ones: "));
   Serial.println(digits[value%10]);
   uint8_t values[2] = {digits[value%100/10], digits[value%10]}; //Get the tens and units digits of the score
-  srDisplay.setAll(values); //Set the display to show the score
+  digitalWrite(STCP_pin, LOW);  // Latch pin low
+  shiftOut(DS_pin, SHCP_pin, MSBFIRST, values[1]);
+  shiftOut(DS_pin, SHCP_pin, MSBFIRST, values[0]);
+  digitalWrite(STCP_pin, HIGH); // Latch pin high
 }
 
 //Light the led and make noise corresponding to the value
