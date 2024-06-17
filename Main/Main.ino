@@ -57,6 +57,8 @@ const uint8_t leds[] = {
   B00100000, // Q5
   B01000000, // Q6
   B10000000, // Q7
+  B00000000, // OFF
+  B11111111, // ON
 };
 
 const uint8_t notes[] = { NOTE_A3, NOTE_C4, NOTE_E4, NOTE_G4, NOTE_B4, NOTE_D5, NOTE_F5 };
@@ -165,10 +167,14 @@ void lightLed(uint8_t value){
   Serial.print(F("Light led "));
   Serial.println(value);
   uint8_t values[1] = {leds[value]};
-  srLed.setAll(values); //Set the leds to show the value
+  digitalWrite(STCP_pin, LOW);  // Latch pin low
+  shiftOut(DS_pin, SHCP_pin, MSBFIRST, values[0]);
+  digitalWrite(STCP_pin, HIGH); // Latch pin high
   tone(speakerPin, notes[value]);
   delay(500);
-  srLed.setAllLow(); //Turn off the leds
+  digitalWrite(STCP_pin, LOW);  // Latch pin low
+  shiftOut(DS_pin, SHCP_pin, MSBFIRST, leds[8]);
+  digitalWrite(STCP_pin, HIGH); // Latch pin high
   noTone(speakerPin);
 }
 
@@ -216,7 +222,9 @@ void resetGame(){
   randomSeed(micros());
   score = 0;
   displayScore(score);
-  srLed.setAllLow();
+  digitalWrite(STCP_pin, LOW);  // Latch pin low
+  shiftOut(DS_pin, SHCP_pin, MSBFIRST, leds[8]);
+  digitalWrite(STCP_pin, HIGH); // Latch pin high
 }
 
 void saveScore(uint8_t score, String playerId) {
