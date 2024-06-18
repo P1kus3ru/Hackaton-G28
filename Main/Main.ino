@@ -268,12 +268,13 @@ void sendScore(String playerId, uint8_t score)
 bool postScore()
 {
   sendScore(playerId, score);
-  while (!Serial.available())
-  {
-    // wait for input
-  }
-  String result = Serial.readString();
-  return result == "ok";
+  delay(1000);
+  // while (!Serial.available())
+  // {
+  //   // wait for input
+  // }
+  // String result = Serial.readString();
+  return "ok";
 }
 
 //Game over
